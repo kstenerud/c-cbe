@@ -1,0 +1,4 @@
+[wrap-git]
+directory = compact-float
+url = https://github.com/kstenerud/c-compact-float.git
+revision = head

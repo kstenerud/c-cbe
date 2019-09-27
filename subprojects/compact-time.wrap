@@ -1,0 +1,4 @@
+[wrap-git]
+directory = compact-time
+url = https://github.com/kstenerud/c-compact-time.git
+revision = head

@@ -1,0 +1,4 @@
+[wrap-git]
+directory = smalltime
+url = https://github.com/kstenerud/c-smalltime.git
+revision = head
