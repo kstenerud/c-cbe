@@ -162,7 +162,7 @@ typedef struct
     bool (*on_float) (struct cbe_decode_process* decode_process, double value);
 
     // A decimal floating point value was decoded.
-    // bool (*on_decimal) (struct cbe_decode_process* decode_process, dec64_ct value);
+    bool (*on_decimal_float) (struct cbe_decode_process* decode_process, dec64_ct value);
 
     // A date value was decoded.
 //    bool (*on_date) (struct cbe_decode_process* decode_process, int year, int month, int day);
@@ -525,7 +525,8 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_boolean(struct cbe_encode_process* e
  * Add an integer value to the document.
  *
  * @param encode_process The encode process.
- * @param value The value to add.
+ * @param sign The sign of the value (1 or -1).
+ * @param value The absolute value to add.
  * @return The current encoder status.
  */
 CBE_PUBLIC cbe_encode_status cbe_encode_add_integer(struct cbe_encode_process* encode_process, int sign, uint64_t value);
@@ -533,12 +534,26 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_integer(struct cbe_encode_process* e
 /**
  * Add a floating point value to the document.
  * Note that this will add a narrower type if it will fit.
+ * If rounding is selected, values will be rounded using banker's rounding (round to even).
  *
  * @param encode_process The encode process.
  * @param value The value to add.
+ * @param significant_digits The number of significant digits to round to (0 = don't round).
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_float(struct cbe_encode_process* encode_process, double value);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_float(struct cbe_encode_process* encode_process, double value, int significant_digits);
+
+/**
+ * Add a decimal floating point value to the document.
+ * Note that this will add a narrower type if it will fit.
+ * If rounding is selected, values will be rounded using banker's rounding (round to even).
+ *
+ * @param encode_process The encode process.
+ * @param value The value to add.
+ * @param significant_digits The number of significant digits to round to (0 = don't round).
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_float(struct cbe_encode_process* encode_process, dec64_ct value, int significant_digits);
 
 /**
  * Begin a list in the document. Must be matched by an end container.

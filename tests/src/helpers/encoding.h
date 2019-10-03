@@ -258,6 +258,7 @@ public:
         type_int_pos,
         type_int_neg,
         type_float,
+        type_decfloat,
         type_bool,
         type_date,
         type_time,
@@ -284,6 +285,7 @@ public:
 
     const uint64_t i;
     const double f;
+    const dec64_ct df;
     const date d;
     const time t;
     const timestamp ts;
@@ -291,19 +293,24 @@ public:
     const std::string str;
     const std::vector<unsigned char> bin;
 
-    value(value_type type_in, uint64_t value): type(type_in), i(value), f(), d(), t(), ts(), b(), str(), bin() {}
-    value(value_type type_in, double value): type(type_in), i(), f(value), d(), t(), ts(), b(), str(), bin() {}
-    value(value_type type_in, date value): type(type_in), i(), f(), d(value), t(), ts(), b(), str(), bin() {}
-    value(value_type type_in, time value): type(type_in), i(), f(), d(), t(value), ts(), b(), str(), bin() {}
-    value(value_type type_in, timestamp value): type(type_in), i(), f(), d(), t(), ts(value), b(), str(), bin() {}
-    value(value_type type_in, bool value): type(type_in), i(), f(), d(), t(), ts(), b(value), str(), bin() {}
-    value(value_type type_in, std::string value): type(type_in), i(), f(), d(), t(), ts(), b(), str(value), bin() {}
-    value(value_type type_in, std::vector<unsigned char> value): type(type_in), i(), f(), d(), t(), ts(), b(), str(), bin(value) {}
+    value(value_type type_in, uint64_t value): type(type_in), i(value), f(), df(), d(), t(), ts(), b(), str(), bin() {}
+    value(value_type type_in, double value, int digits): type(type_in), i(digits), f(value), df(), d(), t(), ts(), b(), str(), bin() {}
+    value(value_type type_in, dec64_ct value, int digits): type(type_in), i(digits), f(), df(value), d(), t(), ts(), b(), str(), bin() {}
+    value(value_type type_in, date value): type(type_in), i(), f(), df(), d(value), t(), ts(), b(), str(), bin() {}
+    value(value_type type_in, time value): type(type_in), i(), f(), df(), d(), t(value), ts(), b(), str(), bin() {}
+    value(value_type type_in, timestamp value): type(type_in), i(), f(), df(), d(), t(), ts(value), b(), str(), bin() {}
+    value(value_type type_in, bool value): type(type_in), i(), f(), df(), d(), t(), ts(), b(value), str(), bin() {}
+    value(value_type type_in, std::string value): type(type_in), i(), f(), df(), d(), t(), ts(), b(), str(value), bin() {}
+    value(value_type type_in, std::vector<unsigned char> value): type(type_in), i(), f(), df(), d(), t(), ts(), b(), str(), bin(value) {}
 
     bool operator==(const value& them) const
     {
         #define EQ(MEMBER) this->MEMBER == them.MEMBER
-        return EQ(type) && EQ(i) && EQ(f) && EQ(d) && EQ(t) && EQ(ts) && EQ(b) && EQ(str) && EQ(bin);
+        if(f != 0 || df != 0)
+        {
+            return EQ(type) && EQ(f) && EQ(df);
+        }
+        return EQ(type) && EQ(i) && EQ(f) && EQ(d) && EQ(df) && EQ(t) && EQ(ts) && EQ(b) && EQ(str) && EQ(bin);
     }
 
     std::string to_string() const
@@ -318,7 +325,10 @@ public:
                 stream << "i(-" << i << ")";
                 break;
             case type_float:
-                stream << "f(" << f << ")";
+                stream << "f(" << std::setprecision(16) << f << ", " << i << ")";
+                break;
+            case type_decfloat:
+                stream << "df(" << std::setprecision(16) << (double)df << ", " << i << ")";
                 break;
             case type_bool:
                 stream << "b(" << (b ? "true" : "false") << ")";
@@ -407,7 +417,8 @@ public:
         return value(type_int_neg, v);
     }
     static value uv(uint64_t v) {return value(type_int_pos, v);}
-    static value fv(double v) {return value(type_float, v);}
+    static value fv(double v, int digits) {return value(type_float, v, digits);}
+    static value dfv(dec64_ct v, int digits) {return value(type_decfloat, v, digits);}
     static value bv(bool v) {return value(type_bool, v);}
     static value dv(date v) {return value(type_date, v);}
     static value dv(int year, int month, int day) {return value(type_date, date(year, month, day));}
@@ -486,7 +497,6 @@ public:
     #define DEFINE_INITIATOR_1(NAME, TYPE) enc NAME(TYPE v) {return add(value::NAME##v(v));}
     DEFINE_INITIATOR_1(i, int64_t)
     DEFINE_INITIATOR_1(u, uint64_t)
-    DEFINE_INITIATOR_1(f, double)
     DEFINE_INITIATOR_1(b, bool)
     DEFINE_INITIATOR_1(d, date)
     DEFINE_INITIATOR_1(t, time)
@@ -511,6 +521,8 @@ public:
     #undef DEFINE_INITIATOR_1
 
     enc i(int sign, uint64_t v) {return add(value::iv(sign, v));}
+    enc f(double v, int digits) {return add(value::fv(v, digits));}
+    enc df(dec64_ct v, int digits) {return add(value::dfv(v, digits));}
     enc d(int year, int month, int day) {return add(value::dv(year, month, day));}
     enc t(int hour, int minute, int second, int nanosecond, const char* tz)
     {return add(value::tv(hour, minute, second, nanosecond, tz));}
@@ -530,7 +542,6 @@ public:
 #define DEFINE_INITIATOR_1(NAME, TYPE) static enc NAME(TYPE v) {return enc().add(value::NAME##v(v));}
 DEFINE_INITIATOR_1(i, int64_t)
 DEFINE_INITIATOR_1(u, uint64_t)
-DEFINE_INITIATOR_1(f, double)
 DEFINE_INITIATOR_1(b, bool)
 DEFINE_INITIATOR_1(d, date)
 DEFINE_INITIATOR_1(t, time)
@@ -555,6 +566,8 @@ DEFINE_INITIATOR_1(pad, unsigned)
 #undef DEFINE_INITIATOR_1
 
 static enc i(int sign, uint64_t v) {return enc().add(value::iv(sign, v));}
+static enc f(double v, int digits) {return enc().add(value::fv(v, digits));}
+static enc df(dec64_ct v, int digits) {return enc().add(value::dfv(v, digits));}
 static enc d(int year, int month, int day) {return enc().add(value::dv(year, month, day));}
 static enc t(int hour, int minute, int second, int nanosecond, const char* tz)
 {return enc().add(value::tv(hour, minute, second, nanosecond, tz));}

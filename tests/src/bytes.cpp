@@ -13,7 +13,7 @@ TEST_ENCODE_DECODE_SHRINKING(Bytes,  size_500, 3, bin(make_bytes(500)), concat({
 TEST_ENCODE_STATUS(Bytes, too_long,   99, 9, CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED, binh(1).data({0x30, 0x30}))
 TEST_ENCODE_STATUS(Bytes, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30, 0x30}))
 TEST_ENCODE_STATUS(Bytes, int,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).i(0x7ffffffffl))
-TEST_ENCODE_STATUS(Bytes, float,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).f(0.1))
+TEST_ENCODE_STATUS(Bytes, float,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).f(0.1, 0))
 // TEST_ENCODE_STATUS(Bytes, decimal,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).dec(0.1))
 // TEST_ENCODE_STATUS(Bytes, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).time((smalltime)0))
 TEST_ENCODE_STATUS(Bytes, boolean,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, binh(5).data({0x30}).b(false))

@@ -38,7 +38,7 @@ public:
     bool on_boolean(bool value);
     bool on_integer(int sign, uint64_t value);
     bool on_float(double value);
-    bool on_decimal(dec64_ct value);
+    bool on_decimal_float(dec64_ct value);
     bool on_list_begin();
     bool on_unordered_map_begin();
     bool on_ordered_map_begin();

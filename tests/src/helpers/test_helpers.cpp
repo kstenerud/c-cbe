@@ -167,6 +167,7 @@ void expect_encode_decode_produces_status(int buffer_size,
 
 void expect_encode_decode_produces_data_and_status(int buffer_size,
                                                    int max_container_depth,
+                                                   const encoding::enc& original_encoding,
                                                    const encoding::enc& expected_encoding,
                                                    const std::vector<uint8_t> expected_memory,
                                                    cbe_encode_status expected_encode_status,
@@ -174,7 +175,7 @@ void expect_encode_decode_produces_data_and_status(int buffer_size,
 {
     if(expect_encode_produces_data_and_status(buffer_size,
                                               max_container_depth,
-                                              expected_encoding,
+                                              original_encoding,
                                               expected_memory,
                                               expected_encode_status) == CBE_ENCODE_STATUS_OK)
     {
@@ -189,6 +190,7 @@ void expect_encode_decode_produces_data_and_status(int buffer_size,
 }
 
 void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
+                                                     const encoding::enc& original_encoding,
                                                      const encoding::enc& expected_encoding,
                                                      const std::vector<uint8_t> expected_memory)
 {
@@ -202,6 +204,7 @@ void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
     {
         expect_encode_decode_produces_data_and_status(buffer_size,
                                                       max_container_depth,
+                                                      original_encoding,
                                                       expected_encoding,
                                                       expected_memory,
                                                       CBE_ENCODE_STATUS_OK,
@@ -211,7 +214,7 @@ void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
     {
         expect_encode_produces_data_and_status(min_buffer_size - 1,
                                                max_container_depth,
-                                               expected_encoding,
+                                               original_encoding,
                                                expected_memory,
                                                CBE_ENCODE_STATUS_NEED_MORE_ROOM);
     }

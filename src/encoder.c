@@ -293,6 +293,27 @@ static inline cbe_encode_status add_int_small(cbe_encode_process* const process,
 DEFINE_ADD_SCALAR_FUNCTION(float,  float_32, float32, TYPE_FLOAT_BINARY_32)
 DEFINE_ADD_SCALAR_FUNCTION(double, float_64, float64, TYPE_FLOAT_BINARY_64)
 
+ANSI_EXTENSION static inline cbe_encode_status add_float_decimal(cbe_encode_process* const process, _Decimal64 value, int significant_digits)
+{
+    KSLOG_DEBUG("(process %p)", process);
+
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 1);
+
+    add_primitive_type(process, TYPE_FLOAT_DECIMAL);
+    int bytes_encoded = cfloat_encode(value, significant_digits, process->buffer.position, process->buffer.end - process->buffer.position);
+    if(bytes_encoded < 1)
+    {
+        KSLOG_DEBUG("Not enough room to encode decimal ~ %f with %d significant digits", (double)value, significant_digits);
+        return CBE_ENCODE_STATUS_NEED_MORE_ROOM;
+    }
+    process->buffer.position += bytes_encoded;
+
+    swap_map_key_value_status(process);
+
+    return CBE_ENCODE_STATUS_OK;
+}
+
 #define DEFINE_ADD_INT_FUNCTION(DATA_TYPE, NAME, DEFINITION_TYPE, CBE_TYPE) \
     static inline cbe_encode_status add_ ## NAME(cbe_encode_process* const process, const int is_negative, const DATA_TYPE value) \
     { \
@@ -580,7 +601,7 @@ cbe_encode_status cbe_encode_add_integer(cbe_encode_process* const process, cons
     return add_int_64(process, is_negative, value);
 }
 
-cbe_encode_status cbe_encode_add_float(cbe_encode_process* const process, const double value)
+cbe_encode_status cbe_encode_add_float(cbe_encode_process* const process, const double value, int significant_digits)
 {
     KSLOG_DEBUG("(process %p, value %f)", process, value);
     unlikely_if(process == NULL)
@@ -588,21 +609,25 @@ cbe_encode_status cbe_encode_add_float(cbe_encode_process* const process, const 
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
 
-    if(FITS_IN_FLOAT_32(value)) return add_float_32(process, value);
-    return add_float_64(process, value);
+    if(significant_digits < 1 || significant_digits > 15)
+    {
+        if(FITS_IN_FLOAT_32(value)) return add_float_32(process, value);
+        return add_float_64(process, value);
+    }
+
+    return add_float_decimal(process, value, significant_digits);
 }
 
-// cbe_encode_status cbe_encode_add_decimal(cbe_encode_process* const process, const dec64_ct value)
-// {
-//     KSLOG_DEBUG("(process %p, value ~%d)", process, (double)value);
-//     unlikely_if(process == NULL)
-//     {
-//         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
-//     }
+cbe_encode_status cbe_encode_add_decimal_float(cbe_encode_process* const process, const dec64_ct value, int significant_digits)
+{
+    KSLOG_DEBUG("(process %p, value ~= %f)", process, (double)value);
+    unlikely_if(process == NULL)
+    {
+        return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
+    }
 
-//     if(FITS_IN_DECIMAL_32(value)) return add_decimal_32(process, value);
-//     return add_decimal_64(process, value);
-// }
+    return add_float_decimal(process, value, significant_digits);
+}
 
 cbe_encode_status cbe_encode_list_begin(cbe_encode_process* const process)
 {

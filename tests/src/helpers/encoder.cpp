@@ -71,7 +71,9 @@ cbe_encode_status encoder::encode(const encoding::value& v)
             case encoding::value::type_int_neg:
                 return cbe_encode_add_integer(_process, -1, v.i);
             case encoding::value::type_float:
-                return cbe_encode_add_float(_process, v.f);
+                return cbe_encode_add_float(_process, v.f, v.i);
+            case encoding::value::type_decfloat:
+                return cbe_encode_add_decimal_float(_process, v.df, v.i);
             case encoding::value::type_bool:
                 return cbe_encode_add_boolean(_process, v.b);
             case encoding::value::type_date:

@@ -10,7 +10,7 @@ TEST_ENCODE_DECODE_SHRINKING(Map, size_1, 1, umap().str("1").i(1).end(), {0x78, 
 TEST_ENCODE_DECODE_SHRINKING(Map, size_2, 1, umap().str("1").i(1).str("2").i(2).end(), {0x78, 0x81, 0x31, 0x01, 0x81, 0x32, 0x02, 0x7b})
 
 TEST_ENCODE_DECODE_STATUS(Map, unterminated,   99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, umap())
-TEST_ENCODE_DECODE_STATUS(Map, unterminated_2, 99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, umap().f(0.1).i(1))
+TEST_ENCODE_DECODE_STATUS(Map, unterminated_2, 99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, umap().f(0.1, 0).i(1))
 TEST_ENCODE_DECODE_STATUS(Map, unterminated_3, 99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, umap().str("").list())
 TEST_ENCODE_DECODE_STATUS(Map, unterminated_4, 99, 9, CBE_ENCODE_ERROR_UNBALANCED_CONTAINERS, CBE_DECODE_ERROR_UNBALANCED_CONTAINERS, umap().str("").list().end())
 
@@ -31,8 +31,8 @@ TEST_ENCODE_STATUS(Map, encode_missing_value_i16,         99, 9, CBE_ENCODE_ERRO
 TEST_ENCODE_STATUS(Map, encode_missing_value_i32,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().i(0xfffff).end())
 TEST_ENCODE_STATUS(Map, encode_missing_value_i64,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().i(0xfffffffff).end())
 // TEST_ENCODE_STATUS(Map, encode_missing_value_i128,        99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().i(0x0f, 0xffffffffffffffff).end())
-TEST_ENCODE_STATUS(Map, encode_missing_value_f32,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().f(0.1).end())
-TEST_ENCODE_STATUS(Map, encode_missing_value_f64,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().f(1.0123).end())
+TEST_ENCODE_STATUS(Map, encode_missing_value_f32,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().f(0.1, 0).end())
+TEST_ENCODE_STATUS(Map, encode_missing_value_f64,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().f(1.0123, 0).end())
 // TEST_ENCODE_STATUS(Map, encode_missing_value_f128,        99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().f(1.012345l).end())
 // TEST_ENCODE_STATUS(Map, encode_missing_value_d32,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().dec(0.1).end())
 // TEST_ENCODE_STATUS(Map, encode_missing_value_d64,         99, 9, CBE_ENCODE_ERROR_MAP_MISSING_VALUE_FOR_KEY, umap().dec(1000000.000001dd).end())

@@ -43,12 +43,14 @@ void expect_encode_decode_produces_status(int buffer_size,
 
 void expect_encode_decode_produces_data_and_status(int buffer_size,
                                                    int max_container_depth,
+                                                   const encoding::enc& original_encoding,
                                                    const encoding::enc& expected_encoding,
                                                    const std::vector<uint8_t> expected_memory,
                                                    cbe_encode_status expected_encode_status,
                                                    cbe_decode_status expected_decode_status);
 
 void expect_encode_decode_with_shrinking_buffer_size(int min_buffer_size,
+                                                     const encoding::enc& original_encoding,
                                                      const encoding::enc& expected_encoding,
                                                      const std::vector<uint8_t> expected_memory);
 } // namespace cbe_test
@@ -101,12 +103,27 @@ TEST(TESTCASE, NAME) \
 }
 
 // Test that encoding and decoding results in success.
+#define TEST_ENCODE_DECODE_DATA_ENCODING(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, ORIG_ENCODING, EXPECTED_ENCODING, ...) \
+TEST(TESTCASE, NAME) \
+{ \
+    const std::vector<uint8_t> memory = __VA_ARGS__; \
+    cbe_test::expect_encode_decode_produces_data_and_status(BUFFER_SIZE, \
+                                                            MAX_DEPTH, \
+                                                            ORIG_ENCODING, \
+                                                            EXPECTED_ENCODING, \
+                                                            memory, \
+                                                            CBE_ENCODE_STATUS_OK, \
+                                                            CBE_DECODE_STATUS_OK); \
+}
+
+// Test that encoding and decoding results in success.
 #define TEST_ENCODE_DECODE_DATA(TESTCASE, NAME, BUFFER_SIZE, MAX_DEPTH, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
     const std::vector<uint8_t> memory = __VA_ARGS__; \
     cbe_test::expect_encode_decode_produces_data_and_status(BUFFER_SIZE, \
                                                             MAX_DEPTH, \
+                                                            ENCODING, \
                                                             ENCODING, \
                                                             memory, \
                                                             CBE_ENCODE_STATUS_OK, \
@@ -129,7 +146,7 @@ TEST(TESTCASE, NAME) \
 #define TEST_ENCODE_DECODE_SHRINKING(TESTCASE, NAME, MIN_BUFFER_SIZE, ENCODING, ...) \
 TEST(TESTCASE, NAME) \
 { \
-    cbe_test::expect_encode_decode_with_shrinking_buffer_size(MIN_BUFFER_SIZE, ENCODING, __VA_ARGS__); \
+    cbe_test::expect_encode_decode_with_shrinking_buffer_size(MIN_BUFFER_SIZE, ENCODING, ENCODING, __VA_ARGS__); \
 }
 
 // Test that decoding results in the specified status code.

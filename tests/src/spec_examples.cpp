@@ -26,15 +26,14 @@ TEST_ENCODE_DECODE_DATA(Spec_Integer, n1000000000000, 99, 9, i(-1000000000000), 
 
 // Binary Floating Point
 
-TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, 0x1_5fc4p10,   99, 9, f(0x1.5fc4p10),   {0x70, 0x00, 0xe2, 0xaf, 0x44})
-TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, 0x1_28f993ab41p100, 99, 9, f(0x1.28f993ab41p100), {0x71, 0x00, 0x10, 0xb4, 0x3a, 0x99, 0x8f, 0x32, 0x46})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, 0x1_5fc4p10,   99, 9, f(0x1.5fc4p10, 0),   {0x70, 0x00, 0xe2, 0xaf, 0x44})
+TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, 0x1_28f993ab41p100, 99, 9, f(0x1.28f993ab41p100, 0), {0x71, 0x00, 0x10, 0xb4, 0x3a, 0x99, 0x8f, 0x32, 0x46})
 
 
 // Decinal Floating Point
 
-// TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, n7_5,    99, 9, dec(-7.5df),   {0x75, 0x4b, 0x00, 0x00, 0xb2})
-// TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, p1281_2, 99, 9, dec(1281.2df), {0x75, 0x0c, 0x32, 0x00, 0x32})
-
+TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, n7_5,    99, 9, df(-7.5df, 0),   {0x65, 0x07, 0x4b})
+TEST_ENCODE_DECODE_DATA_ENCODING(Spec_DecimalFloat, 9_214235775e80, 99, 9, df(9.214235775e80df, 6), df(9.21424e80df, 0), {0x65, 0x82, 0x2c, 0xb8, 0x9e, 0x50})
 
 // Time
 

@@ -27,7 +27,7 @@ TEST_ENCODE_DECODE_SHRINKING(String, size_500, 3, str(make_string(500)), concat(
 TEST_ENCODE_STATUS(String, too_long,   99, 9, CBE_ENCODE_ERROR_ARRAY_FIELD_LENGTH_EXCEEDED, strh(1).data({0x30, 0x30}))
 TEST_ENCODE_STATUS(String, too_short,  99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30, 0x30}))
 TEST_ENCODE_STATUS(String, int,        99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).i(0x7ffffffffl))
-TEST_ENCODE_STATUS(String, float,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).f(0.1))
+TEST_ENCODE_STATUS(String, float,      99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).f(0.1, 0))
 // TEST_ENCODE_STATUS(String, decimal,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).dec(0.1))
 // TEST_ENCODE_STATUS(String, time,       99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).time((smalltime)0))
 TEST_ENCODE_STATUS(String, boolean,    99, 9, CBE_ENCODE_ERROR_INCOMPLETE_ARRAY_FIELD, strh(5).data({0x30}).b(false))

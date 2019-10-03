@@ -26,6 +26,7 @@ DEFINE_CALLBACK_0(on_nil)
 DEFINE_CALLBACK_1(on_boolean, bool)
 DEFINE_CALLBACK_2(on_integer, int, uint64_t)
 DEFINE_CALLBACK_1(on_float, double)
+DEFINE_CALLBACK_1(on_decimal_float, dec64_ct)
 DEFINE_CALLBACK_0(on_list_begin)
 DEFINE_CALLBACK_0(on_unordered_map_begin)
 DEFINE_CALLBACK_0(on_ordered_map_begin)
@@ -49,6 +50,7 @@ ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
     on_boolean: on_boolean,
     on_integer: on_integer,
     on_float: on_float,
+    on_decimal_float: on_decimal_float,
     on_list_begin: on_list_begin,
     on_unordered_map_begin: on_unordered_map_begin,
     on_ordered_map_begin: on_ordered_map_begin,
@@ -141,14 +143,12 @@ bool decoder::on_integer(int sign, uint64_t value)
 
 bool decoder::on_float(double value)
 {
-    return this->mark_complete(encoding::value::fv(value));
+    return this->mark_complete(encoding::value::fv(value, 0));
 }
 
-bool decoder::on_decimal(dec64_ct value)
+bool decoder::on_decimal_float(dec64_ct value)
 {
-    // TODO
-    (void)value;
-    return false;
+    return this->mark_complete(encoding::value::dfv(value, 0));
 }
 
 bool decoder::on_list_begin()

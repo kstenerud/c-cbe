@@ -522,8 +522,12 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 HANDLE_CASE_SCALAR(double, float64, float);
                 break;
             case TYPE_FLOAT_DECIMAL:
-                // TODO
+            {
+                dec64_ct value = 0;
+                STOP_AND_EXIT_IF_READ_FAILED(process, cfloat_decode(process->buffer.position, process->buffer.end - process->buffer.position, &value));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process, process->callbacks->on_decimal_float(process, value));
                 break;
+            }
             case TYPE_DATE:
                 // TODO
                 break;
