@@ -56,10 +56,10 @@ typedef uint8_t cbe_encoded_type_field;
 // ==============
 
 #define STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM(PROCESS, REQUIRED_BYTES) \
-    unlikely_if(get_remaining_space_in_buffer(PROCESS) < (int64_t)(REQUIRED_BYTES)) \
+    unlikely_if(buff_remaining_length(PROCESS) < (int64_t)(REQUIRED_BYTES)) \
     { \
         KSLOG_DEBUG("STOP AND EXIT: Require %d bytes but only %d available.", \
-            (REQUIRED_BYTES), get_remaining_space_in_buffer(PROCESS)); \
+            (REQUIRED_BYTES), buff_remaining_length(PROCESS)); \
         return CBE_ENCODE_STATUS_NEED_MORE_ROOM; \
     }
 
@@ -150,7 +150,7 @@ static inline int64_t minimum_int64(const int64_t a, const int64_t b)
     return a < b ? a : b;
 }
 
-static inline int64_t get_remaining_space_in_buffer(cbe_encode_process* const process)
+static inline int64_t buff_remaining_length(cbe_encode_process* const process)
 {
     return process->buffer.end - process->buffer.position;
 }
@@ -208,7 +208,7 @@ DEFINE_PRIMITIVE_ADD_FUNCTION(double,      float64)
 
 static inline void add_primitive_rvlq(cbe_encode_process* const process, uint64_t value)
 {
-        int byte_count = rvlq_encode_64(value, process->buffer.position, process->buffer.end - process->buffer.position);
+        int byte_count = rvlq_encode_64(value, process->buffer.position, buff_remaining_length(process));
         KSLOG_DATA_DEBUG(process->buffer.position, byte_count, NULL);
         process->buffer.position += byte_count;
 }
@@ -300,11 +300,14 @@ ANSI_EXTENSION static inline cbe_encode_status add_float_decimal(cbe_encode_proc
     STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process);
     STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 1);
 
+    uint8_t* old_position = process->buffer.position;
+
     add_primitive_type(process, TYPE_FLOAT_DECIMAL);
-    int bytes_encoded = cfloat_encode(value, significant_digits, process->buffer.position, process->buffer.end - process->buffer.position);
+    int bytes_encoded = cfloat_encode(value, significant_digits, process->buffer.position, buff_remaining_length(process));
     if(bytes_encoded < 1)
     {
         KSLOG_DEBUG("Not enough room to encode decimal ~ %f with %d significant digits", (double)value, significant_digits);
+        process->buffer.position = old_position;
         return CBE_ENCODE_STATUS_NEED_MORE_ROOM;
     }
     process->buffer.position += bytes_encoded;
@@ -402,7 +405,7 @@ static cbe_encode_status encode_array_contents(cbe_encode_process* const process
     likely_if(*byte_count > 0)
     {
         const int64_t want_to_copy = *byte_count;
-        const int64_t space_in_buffer = get_remaining_space_in_buffer(process);
+        const int64_t space_in_buffer = buff_remaining_length(process);
         const int64_t bytes_to_copy = minimum_int64(want_to_copy, space_in_buffer);
 
         KSLOG_DEBUG("Type: %d", process->array.type);
@@ -603,7 +606,7 @@ cbe_encode_status cbe_encode_add_integer(cbe_encode_process* const process, cons
 
 cbe_encode_status cbe_encode_add_float(cbe_encode_process* const process, const double value, int significant_digits)
 {
-    KSLOG_DEBUG("(process %p, value %f)", process, value);
+    KSLOG_DEBUG("(process %p, value %.16g)", process, value);
     unlikely_if(process == NULL)
     {
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
@@ -620,13 +623,146 @@ cbe_encode_status cbe_encode_add_float(cbe_encode_process* const process, const 
 
 cbe_encode_status cbe_encode_add_decimal_float(cbe_encode_process* const process, const dec64_ct value, int significant_digits)
 {
-    KSLOG_DEBUG("(process %p, value ~= %f)", process, (double)value);
+    KSLOG_DEBUG("(process %p, value ~= %.16g)", process, (double)value);
     unlikely_if(process == NULL)
     {
         return CBE_ENCODE_ERROR_INVALID_ARGUMENT;
     }
 
     return add_float_decimal(process, value, significant_digits);
+}
+
+#define FILL_TZ_STRING(TZ_PTR, TZ_STRING) \
+    if(TZ_STRING == NULL) \
+    { \
+        (TZ_PTR)->type = CT_TZ_ZERO; \
+    } \
+    else \
+    { \
+        (TZ_PTR)->type = CT_TZ_STRING; \
+        int length = strlen(TZ_STRING); \
+        if((length + 1) > (int)sizeof((TZ_PTR)->as_string)) \
+        { \
+            return CBE_ENCODE_ERROR_INVALID_ARGUMENT; \
+        } \
+        memcpy((TZ_PTR)->as_string, TZ_STRING, length); \
+        (TZ_PTR)->as_string[length] = 0; \
+    }
+
+#define ADD_TIME_COMMON(NAME_LOWER, NAME_UPPER) \
+    STOP_AND_EXIT_IF_IS_INSIDE_ARRAY(process); \
+    STOP_AND_EXIT_IF_NOT_ENOUGH_ROOM_WITH_TYPE(process, 1); \
+    uint8_t* old_position = process->buffer.position; \
+    \
+    add_primitive_type(process, TYPE_##NAME_UPPER); \
+    int bytes_encoded = ct_##NAME_LOWER##_encode(&NAME_LOWER, process->buffer.position, buff_remaining_length(process)); \
+    if(bytes_encoded < 1) \
+    { \
+        KSLOG_DEBUG("Not enough room to encode " #NAME_LOWER); \
+        process->buffer.position = old_position; \
+        return CBE_ENCODE_STATUS_NEED_MORE_ROOM; \
+    } \
+    process->buffer.position += bytes_encoded; \
+    \
+    swap_map_key_value_status(process); \
+    \
+    return CBE_ENCODE_STATUS_OK
+
+cbe_encode_status cbe_encode_add_date(struct cbe_encode_process* const process, int year, int month, int day)
+{
+    ct_date date = {
+        .year = year,
+        .month = month,
+        .day = day,
+    };
+
+    ADD_TIME_COMMON(date, DATE);
+}
+
+cbe_encode_status cbe_encode_add_time_tz(struct cbe_encode_process* const process, int hour, int minute, int second, int nanosecond, const char* tz_string)
+{
+    ct_time time = {
+        .hour = hour,
+        .minute = minute,
+        .second = second,
+        .nanosecond = nanosecond,
+        .timezone =
+        {
+            .type = CT_TZ_STRING,
+        },
+    };
+
+    FILL_TZ_STRING(&time.timezone, tz_string);
+    ADD_TIME_COMMON(time, TIME);
+}
+
+cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* const process, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+{
+    ct_time time = {
+        .hour = hour,
+        .minute = minute,
+        .second = second,
+        .nanosecond = nanosecond,
+        .timezone =
+        {
+            .type = CT_TZ_LATLONG,
+            .latitude = latitude,
+            .longitude = longitude,
+        },
+    };
+
+    ADD_TIME_COMMON(time, TIME);
+}
+
+cbe_encode_status cbe_encode_add_timestamp_tz(struct cbe_encode_process* const process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz_string)
+{
+    ct_timestamp timestamp =
+    {
+        .date = {
+            .year = year,
+            .month = month,
+            .day = day,
+        },
+        .time = {
+            .hour = hour,
+            .minute = minute,
+            .second = second,
+            .nanosecond = nanosecond,
+            .timezone =
+            {
+                .type = CT_TZ_STRING,
+            },
+        }
+    };
+
+    FILL_TZ_STRING(&timestamp.time.timezone, tz_string);
+    ADD_TIME_COMMON(timestamp, TIMESTAMP);
+}
+
+cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* const process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+{
+    ct_timestamp timestamp =
+    {
+        .date = {
+            .year = year,
+            .month = month,
+            .day = day,
+        },
+        .time = {
+            .hour = hour,
+            .minute = minute,
+            .second = second,
+            .nanosecond = nanosecond,
+            .timezone =
+            {
+                .type = CT_TZ_LATLONG,
+                .latitude = latitude,
+                .longitude = longitude,
+            },
+        }
+    };
+
+    ADD_TIME_COMMON(timestamp, TIMESTAMP);
 }
 
 cbe_encode_status cbe_encode_list_begin(cbe_encode_process* const process)

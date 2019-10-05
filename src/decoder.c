@@ -529,13 +529,64 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
                 break;
             }
             case TYPE_DATE:
-                // TODO
+            {
+                ct_date v;
+                STOP_AND_EXIT_IF_READ_FAILED(process, ct_date_decode(process->buffer.position,
+                    process->buffer.end - process->buffer.position, &v));
+                STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                    process->callbacks->on_date(process, v.year, v.month, v.day));
                 break;
+            }
             case TYPE_TIME:
-                // TODO
+            {
+                ct_time v;
+                STOP_AND_EXIT_IF_READ_FAILED(process, ct_time_decode(process->buffer.position,
+                    process->buffer.end - process->buffer.position, &v));
+                switch(v.timezone.type)
+                {
+                    case CT_TZ_ZERO:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_time_tz(process, v.hour, v.minute, v.second, v.nanosecond, NULL));
+                        break;
+                    case CT_TZ_STRING:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_time_tz(process, v.hour, v.minute, v.second,
+                                v.nanosecond, v.timezone.as_string));
+                        break;
+                    case CT_TZ_LATLONG:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_time_loc(process, v.hour, v.minute, v.second,
+                                v.nanosecond, v.timezone.latitude, v.timezone.longitude));
+                        break;
+                }
                 break;
+            }
             case TYPE_TIMESTAMP:
-                // TODO
+            {
+                ct_timestamp v;
+                STOP_AND_EXIT_IF_READ_FAILED(process, ct_timestamp_decode(process->buffer.position,
+                    process->buffer.end - process->buffer.position, &v));
+                switch(v.time.timezone.type)
+                {
+                    case CT_TZ_ZERO:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_timestamp_tz(process, v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond, NULL));
+                        break;
+                    case CT_TZ_STRING:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_timestamp_tz(process, v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond, v.time.timezone.as_string));
+                        break;
+                    case CT_TZ_LATLONG:
+                        STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
+                            process->callbacks->on_timestamp_loc(process, v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond,
+                                v.time.timezone.latitude, v.time.timezone.longitude));
+                        break;
+                }
+                break;
+            }
                 break;
             case TYPE_STRING:
             {

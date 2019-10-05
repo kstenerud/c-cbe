@@ -165,13 +165,15 @@ typedef struct
     bool (*on_decimal_float) (struct cbe_decode_process* decode_process, dec64_ct value);
 
     // A date value was decoded.
-//    bool (*on_date) (struct cbe_decode_process* decode_process, int year, int month, int day);
+    bool (*on_date) (struct cbe_decode_process* decode_process, int year, int month, int day);
 
     // A time value was decoded.
-//    bool (*on_time) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, const char* timezone);
+    bool (*on_time_tz) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, const char* timezone);
+    bool (*on_time_loc) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
 
     // A timestamp value was decoded.
-//    bool (*on_timestamp) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* timezone);
+    bool (*on_timestamp_tz) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* timezone);
+    bool (*on_timestamp_loc) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
 
     // A list has been opened.
     bool (*on_list_begin) (struct cbe_decode_process* decode_process);
@@ -554,6 +556,77 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_float(struct cbe_encode_process* enc
  * @return The current encoder status.
  */
 CBE_PUBLIC cbe_encode_status cbe_encode_add_decimal_float(struct cbe_encode_process* encode_process, dec64_ct value, int significant_digits);
+
+/**
+ * Add a date to the document.
+ *
+ * @param encode_process The encode process.
+ * @param year The year.
+ * @param month The month (1-12).
+ * @param day The day (1-31).
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_date(struct cbe_encode_process* encode_process, int year, int month, int day);
+
+/**
+ * Add a time to the document.
+ *
+ * @param encode_process The encode process.
+ * @param hour The hour (0-23).
+ * @param minute The minute (0-59).
+ * @param second The second (0-60) - 60 to support leap seconds.
+ * @param nanosecond The nanosecond (0-999999999).
+ * @param timezone The timezone. See specification. NULL = UTC.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_time_tz(struct cbe_encode_process* encode_process, int hour, int minute, int second, int nanosecond, const char* timezone);
+
+/**
+ * Add a time to the document.
+ *
+ * @param encode_process The encode process.
+ * @param hour The hour (0-23).
+ * @param minute The minute (0-59).
+ * @param second The second (0-60) - 60 to support leap seconds.
+ * @param nanosecond The nanosecond (0-999999999).
+ * @param latitude The latitude portion of the timezone (-90 to 90). Values are cut off at hundredths of a degree.
+ * @param longitude The longitude portion of the timezone (-180 to 180). Values are cut off at hundredths of a degree.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* encode_process, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
+
+/**
+ * Add a timestamp to the document.
+ *
+ * @param encode_process The encode process.
+ * @param year The year.
+ * @param month The month (1-12).
+ * @param day The day (1-31).
+ * @param hour The hour (0-23).
+ * @param minute The minute (0-59).
+ * @param second The second (0-60) - 60 to support leap seconds.
+ * @param nanosecond The nanosecond (0-999999999).
+ * @param timezone The timezone. See specification. NULL = UTC.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_timestamp_tz(struct cbe_encode_process* encode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* timezone);
+
+/**
+ * Add a timestamp to the document.
+ *
+ * @param encode_process The encode process.
+ * @param year The year.
+ * @param month The month (1-12).
+ * @param day The day (1-31).
+ * @param hour The hour (0-23).
+ * @param minute The minute (0-59).
+ * @param second The second (0-60) - 60 to support leap seconds.
+ * @param nanosecond The nanosecond (0-999999999).
+ * @param latitude The latitude portion of the timezone (-90 to 90). Values are cut off at hundredths of a degree.
+ * @param longitude The longitude portion of the timezone (-180 to 180). Values are cut off at hundredths of a degree.
+ * @return The current encoder status.
+ */
+CBE_PUBLIC cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* encode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
