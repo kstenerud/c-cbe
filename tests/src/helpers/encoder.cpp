@@ -77,11 +77,29 @@ cbe_encode_status encoder::encode(const encoding::value& v)
             case encoding::value::type_bool:
                 return cbe_encode_add_boolean(_process, v.b);
             case encoding::value::type_date:
-                return CBE_ENCODE_STATUS_OK; // TODO
+                return cbe_encode_add_date(_process, v.d.year, v.d.month, v.d.day);
             case encoding::value::type_time:
-                return CBE_ENCODE_STATUS_OK; // TODO
+                switch(v.t.tz.type)
+                {
+                    case encoding::tz_zero:
+                        return cbe_encode_add_time_tz(_process, v.t.hour, v.t.minute, v.t.second, v.t.nanosecond, NULL);
+                    case encoding::tz_zone:
+                        return cbe_encode_add_time_tz(_process, v.t.hour, v.t.minute, v.t.second, v.t.nanosecond, v.t.tz.zone.c_str());
+                    default:
+                        break;
+                }
+                return cbe_encode_add_time_loc(_process, v.t.hour, v.t.minute, v.t.second, v.t.nanosecond, v.t.tz.latitude, v.t.tz.longitude);
             case encoding::value::type_ts:
-                return CBE_ENCODE_STATUS_OK; // TODO
+                switch(v.ts.tz.type)
+                {
+                    case encoding::tz_zero:
+                        return cbe_encode_add_timestamp_tz(_process, v.ts.year, v.ts.month, v.ts.day, v.ts.hour, v.ts.minute, v.ts.second, v.ts.nanosecond, NULL);
+                    case encoding::tz_zone:
+                        return cbe_encode_add_timestamp_tz(_process, v.ts.year, v.ts.month, v.ts.day, v.ts.hour, v.ts.minute, v.ts.second, v.ts.nanosecond, v.ts.tz.zone.c_str());
+                    default:
+                        break;
+                }
+                return cbe_encode_add_timestamp_loc(_process, v.ts.year, v.ts.month, v.ts.day, v.ts.hour, v.ts.minute, v.ts.second, v.ts.nanosecond, v.ts.tz.latitude, v.ts.tz.longitude);
             case encoding::value::type_str:
                 return cbe_encode_string_begin(_process, v.str.size());
             case encoding::value::type_bin:

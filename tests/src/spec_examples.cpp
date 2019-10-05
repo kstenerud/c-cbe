@@ -35,13 +35,12 @@ TEST_ENCODE_DECODE_DATA(Spec_BinaryFloat, 0x1_28f993ab41p100, 99, 9, f(0x1.28f99
 TEST_ENCODE_DECODE_DATA(Spec_DecimalFloat, n7_5,    99, 9, df(-7.5df, 0),   {0x65, 0x07, 0x4b})
 TEST_ENCODE_DECODE_DATA_ENCODING(Spec_DecimalFloat, 9_214235775e80, 99, 9, df(9.214235775e80df, 6), df(9.21424e80df, 0), {0x65, 0x82, 0x2c, 0xb8, 0x9e, 0x50})
 
+
 // Time
 
-// TEST_ENCODE_DECODE_DATA(Spec_Time, smalltime, 99, 9, stime(1985, 10, 26, 8, 22, 16, 900142),
-//     {0x78, 0x2e, 0xbc, 0x0d, 0x59, 0x48, 0x6b, 0xf0, 0x01})
-
-// TEST_ENCODE_DECODE_DATA(Spec_Time, nanotime, 99, 9, ntime(1999, 12, 31, 23, 59, 59, 999999999),
-//     {0x79, 0xff, 0xc9, 0x9a, 0xfb, 0xbe, 0xdf, 0xcf, 0x1d})
+TEST_ENCODE_DECODE_DATA(Spec_Date, date, 99, 9, d(2051, 10, 22), {0x99, 0x56, 0x01, 0x66})
+TEST_ENCODE_DECODE_DATA(Spec_Time, time, 99, 9, t(13, 15, 59, 529435422, "E/Berlin"), {0x9a, 0x6e, 0xcf, 0xee, 0xb1, 0xe8, 0xf8, 0x01, 0x10, 'E', '/', 'B', 'e', 'r', 'l', 'i', 'n'})
+TEST_ENCODE_DECODE_DATA(Spec_TS, timestamp, 99, 9, ts(1985, 10, 26, 1, 22, 16, 0, 3399, -11793), {0x9b, 0x40, 0x56, 0xd0, 0x0a, 0x3a, 0x8f, 0x9a, 0xf7, 0x28})
 
 
 // Byte Array

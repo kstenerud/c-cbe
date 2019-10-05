@@ -11,35 +11,37 @@ namespace encoding
 {
 
 
+typedef enum
+{
+    tz_zone,
+    tz_coords,
+    tz_zero
+} tz_type;
+
 class timezone
 {
 public:
-    const enum
-    {
-        type_zone,
-        type_coords,
-        type_zero
-    } type;
+    const tz_type type;
     const std::string zone;
-    const float latitude;
-    const float longitude;
+    const int latitude;
+    const int longitude;
 
     timezone()
-    : type(type_zero)
-    , zone()
+    : type(tz_zero)
+    , zone("")
     , latitude()
     , longitude()
     {}
 
     timezone(const char* zone_in)
-    : type(type_zone)
-    , zone(zone_in)
-    , latitude(0)
-    , longitude(0)
+    : type(zone_in == NULL ? tz_zero : tz_zone)
+    , zone(zone_in == NULL ? "" : zone_in)
+    , latitude()
+    , longitude()
     {}
 
-    timezone(float latitude_in, float longitude_in)
-    : type(type_coords)
+    timezone(int latitude_in, int longitude_in)
+    : type(tz_coords)
     , zone("")
     , latitude(latitude_in)
     , longitude(longitude_in)
@@ -55,15 +57,15 @@ public:
     {
         switch(type)
         {
-            case timezone::type_zone:
+            case tz_zone:
                 return zone;
-            case timezone::type_coords:
+            case tz_coords:
             {
                 std::stringstream stream;
-                stream << std::fixed << std::setprecision(2) << latitude << "/" << longitude;
+                stream << std::fixed << std::setprecision(2) << ((float)latitude / 100) << "/" << ((float)longitude / 100);
                 return stream.str();
             }
-            case timezone::type_zero:
+            case tz_zero:
                 break;
         }
         return "";
@@ -151,7 +153,7 @@ public:
             }
             stream << "." << std::setw(width) << subsecond;
         }
-        if(tz.type != timezone::type_zero)
+        if(tz.type != tz_zero)
         {
             stream << "/" << tz;
         }
@@ -220,7 +222,7 @@ public:
             }
             stream << "." << std::setw(width) << subsecond;
         }
-        if(tz.type != timezone::type_zero)
+        if(tz.type != tz_zero)
         {
             stream << "/" << tz;
         }
@@ -420,17 +422,18 @@ public:
     static value fv(double v, int digits) {return value(type_float, v, digits);}
     static value dfv(dec64_ct v, int digits) {return value(type_decfloat, v, digits);}
     static value bv(bool v) {return value(type_bool, v);}
-    static value dv(date v) {return value(type_date, v);}
     static value dv(int year, int month, int day) {return value(type_date, date(year, month, day));}
-    static value tv(time v) {return value(type_time, v);}
+    static value tv(int hour, int minute, int second, int nanosecond)
+    {return value(type_time, time(hour, minute, second, nanosecond, timezone()));}
     static value tv(int hour, int minute, int second, int nanosecond, const char* tz)
     {return value(type_time, time(hour, minute, second, nanosecond, timezone(tz)));}
-    static value tv(int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+    static value tv(int hour, int minute, int second, int nanosecond, int latitude, int longitude)
     {return value(type_time, time(hour, minute, second, nanosecond, timezone(latitude, longitude)));}
-    static value tsv(timestamp v) {return value(type_ts, v);}
+    static value tsv(int year, int month, int day, int hour, int minute, int second, int nanosecond)
+    {return value(type_ts, timestamp(year, month, day, hour, minute, second, nanosecond, timezone()));}
     static value tsv(int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz)
     {return value(type_ts, timestamp(year, month, day, hour, minute, second, nanosecond, timezone(tz)));}
-    static value tsv(int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+    static value tsv(int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
     {return value(type_ts, timestamp(year, month, day, hour, minute, second, nanosecond, timezone(latitude, longitude)));}
     static value strv(std::string v) {return value(type_str, v);}
     static value binv(std::vector<unsigned char> v) {return value(type_bin, v);}
@@ -498,9 +501,6 @@ public:
     DEFINE_INITIATOR_1(i, int64_t)
     DEFINE_INITIATOR_1(u, uint64_t)
     DEFINE_INITIATOR_1(b, bool)
-    DEFINE_INITIATOR_1(d, date)
-    DEFINE_INITIATOR_1(t, time)
-    DEFINE_INITIATOR_1(ts, timestamp)
     DEFINE_INITIATOR_1(str, std::string)
     DEFINE_INITIATOR_1(uri, std::string)
     DEFINE_INITIATOR_1(com, std::string)
@@ -524,13 +524,17 @@ public:
     enc f(double v, int digits) {return add(value::fv(v, digits));}
     enc df(dec64_ct v, int digits) {return add(value::dfv(v, digits));}
     enc d(int year, int month, int day) {return add(value::dv(year, month, day));}
+    enc t(int hour, int minute, int second, int nanosecond)
+    {return add(value::tv(hour, minute, second, nanosecond));}
     enc t(int hour, int minute, int second, int nanosecond, const char* tz)
     {return add(value::tv(hour, minute, second, nanosecond, tz));}
-    enc t(int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+    enc t(int hour, int minute, int second, int nanosecond, int latitude, int longitude)
     {return add(value::tv(hour, minute, second, nanosecond, latitude, longitude));}
+    enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond)
+    {return add(value::tsv(year, month, day, hour, minute, second, nanosecond));}
     enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz)
     {return add(value::tsv(year, month, day, hour, minute, second, nanosecond, tz));}
-    enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+    enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
     {return add(value::tsv(year, month, day, hour, minute, second, nanosecond, latitude, longitude));}
 };
 
@@ -543,9 +547,6 @@ public:
 DEFINE_INITIATOR_1(i, int64_t)
 DEFINE_INITIATOR_1(u, uint64_t)
 DEFINE_INITIATOR_1(b, bool)
-DEFINE_INITIATOR_1(d, date)
-DEFINE_INITIATOR_1(t, time)
-DEFINE_INITIATOR_1(ts, timestamp)
 DEFINE_INITIATOR_1(str, std::string)
 DEFINE_INITIATOR_1(uri, std::string)
 DEFINE_INITIATOR_1(com, std::string)
@@ -569,13 +570,17 @@ static enc i(int sign, uint64_t v) {return enc().add(value::iv(sign, v));}
 static enc f(double v, int digits) {return enc().add(value::fv(v, digits));}
 static enc df(dec64_ct v, int digits) {return enc().add(value::dfv(v, digits));}
 static enc d(int year, int month, int day) {return enc().add(value::dv(year, month, day));}
+static enc t(int hour, int minute, int second, int nanosecond)
+{return enc().add(value::tv(hour, minute, second, nanosecond));}
 static enc t(int hour, int minute, int second, int nanosecond, const char* tz)
 {return enc().add(value::tv(hour, minute, second, nanosecond, tz));}
-static enc t(int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+static enc t(int hour, int minute, int second, int nanosecond, int latitude, int longitude)
 {return enc().add(value::tv(hour, minute, second, nanosecond, latitude, longitude));}
+static enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond)
+{return enc().add(value::tsv(year, month, day, hour, minute, second, nanosecond));}
 static enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz)
 {return enc().add(value::tsv(year, month, day, hour, minute, second, nanosecond, tz));}
-static enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+static enc ts(int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
 {return enc().add(value::tsv(year, month, day, hour, minute, second, nanosecond, latitude, longitude));}
 
 #pragma GCC diagnostic pop

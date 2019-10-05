@@ -18,9 +18,29 @@ static bool NAME(struct cbe_decode_process* process) \
 static bool NAME(struct cbe_decode_process* process, TYPE param) \
 {return get_decoder(process)->NAME(param);}
 
-#define DEFINE_CALLBACK_2(NAME, TYPE1, TYPE2) \
-static bool NAME(struct cbe_decode_process* process, TYPE1 param1, TYPE2 param2) \
-{return get_decoder(process)->NAME(param1, param2);}
+#define DEFINE_CALLBACK_2(NAME, T1, T2) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2) \
+{return get_decoder(process)->NAME(p1, p2);}
+
+#define DEFINE_CALLBACK_3(NAME, T1, T2, T3) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2, T3 p3) \
+{return get_decoder(process)->NAME(p1, p2, p3);}
+
+#define DEFINE_CALLBACK_5(NAME, T1, T2, T3, T4, T5) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) \
+{return get_decoder(process)->NAME(p1, p2, p3, p4, p5);}
+
+#define DEFINE_CALLBACK_6(NAME, T1, T2, T3, T4, T5, T6) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6) \
+{return get_decoder(process)->NAME(p1, p2, p3, p4, p5, p6);}
+
+#define DEFINE_CALLBACK_8(NAME, T1, T2, T3, T4, T5, T6, T7, T8) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8) \
+{return get_decoder(process)->NAME(p1, p2, p3, p4, p5, p6, p7, p8);}
+
+#define DEFINE_CALLBACK_9(NAME, T1, T2, T3, T4, T5, T6, T7, T8, T9) \
+static bool NAME(struct cbe_decode_process* process, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9) \
+{return get_decoder(process)->NAME(p1, p2, p3, p4, p5, p6, p7, p8, p9);}
 
 DEFINE_CALLBACK_0(on_nil)
 DEFINE_CALLBACK_1(on_boolean, bool)
@@ -37,11 +57,11 @@ DEFINE_CALLBACK_1(on_bytes_begin, int64_t)
 DEFINE_CALLBACK_1(on_uri_begin, int64_t)
 DEFINE_CALLBACK_1(on_comment_begin, int64_t)
 DEFINE_CALLBACK_2(on_array_data, const uint8_t*, int64_t)
-
-// static bool on_array_data(struct cbe_decode_process* process, const uint8_t* start, int64_t byte_count)
-// {
-//     return get_decoder(process)->add_bytes_data(std::vector<uint8_t>(start, start + byte_count));
-// }
+DEFINE_CALLBACK_3(on_date, int, int, int)
+DEFINE_CALLBACK_5(on_time_tz, int, int, int, int, const char*)
+DEFINE_CALLBACK_6(on_time_loc, int, int, int, int, int, int)
+DEFINE_CALLBACK_8(on_timestamp_tz, int, int, int, int, int, int, int, const char*)
+DEFINE_CALLBACK_9(on_timestamp_loc, int, int, int, int, int, int, int, int, int)
 
 
 ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
@@ -51,6 +71,11 @@ ANSI_EXTENSION static const cbe_decode_callbacks g_callbacks =
     on_integer: on_integer,
     on_float: on_float,
     on_decimal_float: on_decimal_float,
+    on_date: on_date,
+    on_time_tz: on_time_tz,
+    on_time_loc: on_time_loc,
+    on_timestamp_tz: on_timestamp_tz,
+    on_timestamp_loc: on_timestamp_loc,
     on_list_begin: on_list_begin,
     on_unordered_map_begin: on_unordered_map_begin,
     on_ordered_map_begin: on_ordered_map_begin,
@@ -149,6 +174,31 @@ bool decoder::on_float(double value)
 bool decoder::on_decimal_float(dec64_ct value)
 {
     return this->mark_complete(encoding::value::dfv(value, 0));
+}
+
+bool decoder::on_date(int year, int month, int day)
+{
+    return this->mark_complete(encoding::value::dv(year, month, day));
+}
+
+bool decoder::on_time_tz(int hour, int minute, int second, int nanosecond, const char* tz_string)
+{
+    return this->mark_complete(encoding::value::tv(hour, minute, second, nanosecond, tz_string));
+}
+
+bool decoder::on_time_loc(int hour, int minute, int second, int nanosecond, int latitude, int longitude)
+{
+    return this->mark_complete(encoding::value::tv(hour, minute, second, nanosecond, latitude, longitude));
+}
+
+bool decoder::on_timestamp_tz(int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz_string)
+{
+    return this->mark_complete(encoding::value::tsv(year, month, day, hour, minute, second, nanosecond, tz_string));
+}
+
+bool decoder::on_timestamp_loc(int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
+{
+    return this->mark_complete(encoding::value::tsv(year, month, day, hour, minute, second, nanosecond, latitude, longitude));
 }
 
 bool decoder::on_list_begin()

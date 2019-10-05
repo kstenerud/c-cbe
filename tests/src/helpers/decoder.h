@@ -39,6 +39,11 @@ public:
     bool on_integer(int sign, uint64_t value);
     bool on_float(double value);
     bool on_decimal_float(dec64_ct value);
+    bool on_date(int year, int month, int day);
+    bool on_time_tz(int hour, int minute, int second, int nanosecond, const char* tz_string);
+    bool on_time_loc(int hour, int minute, int second, int nanosecond, int latitude, int longitude);
+    bool on_timestamp_tz(int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz_string);
+    bool on_timestamp_loc(int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude);
     bool on_list_begin();
     bool on_unordered_map_begin();
     bool on_ordered_map_begin();

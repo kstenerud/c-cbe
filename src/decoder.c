@@ -530,30 +530,36 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             }
             case TYPE_DATE:
             {
+                KSLOG_DEBUG("<Date>");
                 ct_date v;
                 STOP_AND_EXIT_IF_READ_FAILED(process, ct_date_decode(process->buffer.position,
                     process->buffer.end - process->buffer.position, &v));
+                KSLOG_DEBUG("Date = %d.%02d.%02d", v.year, v.month, v.day);
                 STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                     process->callbacks->on_date(process, v.year, v.month, v.day));
                 break;
             }
             case TYPE_TIME:
             {
+                KSLOG_DEBUG("<Time>");
                 ct_time v;
                 STOP_AND_EXIT_IF_READ_FAILED(process, ct_time_decode(process->buffer.position,
                     process->buffer.end - process->buffer.position, &v));
                 switch(v.timezone.type)
                 {
                     case CT_TZ_ZERO:
+                        KSLOG_DEBUG("Time = %d:%02d:%02d.%09d", v.hour, v.minute, v.second, v.nanosecond);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_time_tz(process, v.hour, v.minute, v.second, v.nanosecond, NULL));
                         break;
                     case CT_TZ_STRING:
+                        KSLOG_DEBUG("Time = %d:%02d:%02d.%09d/%s", v.hour, v.minute, v.second, v.nanosecond, v.timezone.as_string);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_time_tz(process, v.hour, v.minute, v.second,
                                 v.nanosecond, v.timezone.as_string));
                         break;
                     case CT_TZ_LATLONG:
+                        KSLOG_DEBUG("Time = %d:%02d:%02d.%09d/%d/%d", v.hour, v.minute, v.second, v.nanosecond, v.timezone.latitude, v.timezone.longitude);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_time_loc(process, v.hour, v.minute, v.second,
                                 v.nanosecond, v.timezone.latitude, v.timezone.longitude));
@@ -563,22 +569,30 @@ cbe_decode_status cbe_decode_feed(cbe_decode_process* const process,
             }
             case TYPE_TIMESTAMP:
             {
+                KSLOG_DEBUG("<Timestamp>");
                 ct_timestamp v;
                 STOP_AND_EXIT_IF_READ_FAILED(process, ct_timestamp_decode(process->buffer.position,
                     process->buffer.end - process->buffer.position, &v));
                 switch(v.time.timezone.type)
                 {
                     case CT_TZ_ZERO:
+                        KSLOG_DEBUG("TS = %d.%02d.%02d-%d:%02d:%02d.%09d", v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_timestamp_tz(process, v.date.year, v.date.month, v.date.day,
                                 v.time.hour, v.time.minute, v.time.second, v.time.nanosecond, NULL));
                         break;
                     case CT_TZ_STRING:
+                        KSLOG_DEBUG("TS = %d.%02d.%02d-%d:%02d:%02d.%09d/%s", v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond, v.time.timezone.as_string);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_timestamp_tz(process, v.date.year, v.date.month, v.date.day,
                                 v.time.hour, v.time.minute, v.time.second, v.time.nanosecond, v.time.timezone.as_string));
                         break;
                     case CT_TZ_LATLONG:
+                        KSLOG_DEBUG("TS = %d.%02d.%02d-%d:%02d:%02d.%09d/%d/%d", v.date.year, v.date.month, v.date.day,
+                                v.time.hour, v.time.minute, v.time.second, v.time.nanosecond,
+                                v.time.timezone.latitude, v.time.timezone.longitude);
                         STOP_AND_EXIT_IF_FAILED_CALLBACK(process,
                             process->callbacks->on_timestamp_loc(process, v.date.year, v.date.month, v.date.day,
                                 v.time.hour, v.time.minute, v.time.second, v.time.nanosecond,

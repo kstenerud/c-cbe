@@ -670,6 +670,7 @@ cbe_encode_status cbe_encode_add_decimal_float(cbe_encode_process* const process
 
 cbe_encode_status cbe_encode_add_date(struct cbe_encode_process* const process, int year, int month, int day)
 {
+    KSLOG_DEBUG("(process %p, date = %d.%02d.%02d)", process, year, month, day);
     ct_date date = {
         .year = year,
         .month = month,
@@ -681,6 +682,7 @@ cbe_encode_status cbe_encode_add_date(struct cbe_encode_process* const process, 
 
 cbe_encode_status cbe_encode_add_time_tz(struct cbe_encode_process* const process, int hour, int minute, int second, int nanosecond, const char* tz_string)
 {
+    KSLOG_DEBUG("(process %p, time = %d:%02d:%02d.%09d/%s)", process, hour, minute, second, nanosecond, tz_string);
     ct_time time = {
         .hour = hour,
         .minute = minute,
@@ -696,8 +698,9 @@ cbe_encode_status cbe_encode_add_time_tz(struct cbe_encode_process* const proces
     ADD_TIME_COMMON(time, TIME);
 }
 
-cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* const process, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* const process, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
 {
+    KSLOG_DEBUG("(process %p, time = %d:%02d:%02d.%09d/%d/%d)", process, hour, minute, second, nanosecond, latitude, longitude);
     ct_time time = {
         .hour = hour,
         .minute = minute,
@@ -716,6 +719,7 @@ cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* const proce
 
 cbe_encode_status cbe_encode_add_timestamp_tz(struct cbe_encode_process* const process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* tz_string)
 {
+    KSLOG_DEBUG("(process %p, ts = %d.%02d.%02d-%d:%02d:%02d.%09d/%s)", process, year, month, day, hour, minute, second, nanosecond, tz_string);
     ct_timestamp timestamp =
     {
         .date = {
@@ -739,8 +743,9 @@ cbe_encode_status cbe_encode_add_timestamp_tz(struct cbe_encode_process* const p
     ADD_TIME_COMMON(timestamp, TIMESTAMP);
 }
 
-cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* const process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude)
+cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* const process, int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude)
 {
+    KSLOG_DEBUG("(process %p, ts = %d.%02d.%02d-%d:%02d:%02d.%09d/%d/%d)", process, year, month, day, hour, minute, second, nanosecond, latitude, longitude);
     ct_timestamp timestamp =
     {
         .date = {

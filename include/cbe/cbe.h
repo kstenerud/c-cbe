@@ -169,11 +169,11 @@ typedef struct
 
     // A time value was decoded.
     bool (*on_time_tz) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, const char* timezone);
-    bool (*on_time_loc) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
+    bool (*on_time_loc) (struct cbe_decode_process* decode_process, int hour, int minute, int second, int nanosecond, int latitude, int longitude);
 
     // A timestamp value was decoded.
     bool (*on_timestamp_tz) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, const char* timezone);
-    bool (*on_timestamp_loc) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
+    bool (*on_timestamp_loc) (struct cbe_decode_process* decode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude);
 
     // A list has been opened.
     bool (*on_list_begin) (struct cbe_decode_process* decode_process);
@@ -589,11 +589,11 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_time_tz(struct cbe_encode_process* e
  * @param minute The minute (0-59).
  * @param second The second (0-60) - 60 to support leap seconds.
  * @param nanosecond The nanosecond (0-999999999).
- * @param latitude The latitude portion of the timezone (-90 to 90). Values are cut off at hundredths of a degree.
- * @param longitude The longitude portion of the timezone (-180 to 180). Values are cut off at hundredths of a degree.
+ * @param latitude The latitude portion of the timezone in hundredths of degrees (-9000 to 9000).
+ * @param longitude The longitude portion of the timezone in hundredths of degrees (-18000 to 18000).
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* encode_process, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_time_loc(struct cbe_encode_process* encode_process, int hour, int minute, int second, int nanosecond, int latitude, int longitude);
 
 /**
  * Add a timestamp to the document.
@@ -622,11 +622,11 @@ CBE_PUBLIC cbe_encode_status cbe_encode_add_timestamp_tz(struct cbe_encode_proce
  * @param minute The minute (0-59).
  * @param second The second (0-60) - 60 to support leap seconds.
  * @param nanosecond The nanosecond (0-999999999).
- * @param latitude The latitude portion of the timezone (-90 to 90). Values are cut off at hundredths of a degree.
- * @param longitude The longitude portion of the timezone (-180 to 180). Values are cut off at hundredths of a degree.
+ * @param latitude The latitude portion of the timezone in hundredths of degrees (-9000 to 9000).
+ * @param longitude The longitude portion of the timezone in hundredths of degrees (-18000 to 18000).
  * @return The current encoder status.
  */
-CBE_PUBLIC cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* encode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, float latitude, float longitude);
+CBE_PUBLIC cbe_encode_status cbe_encode_add_timestamp_loc(struct cbe_encode_process* encode_process, int year, int month, int day, int hour, int minute, int second, int nanosecond, int latitude, int longitude);
 
 /**
  * Begin a list in the document. Must be matched by an end container.
